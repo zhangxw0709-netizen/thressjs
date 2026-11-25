@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101915">
+  <title>守卫雅典娜 · 标准版 9.0</title>
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body data-phase="ready">
+  <canvas id="world" tabindex="0" aria-label="守卫雅典娜三维战场"></canvas>
+  <div class="world-frame" aria-hidden="true"></div>
+
+  <header class="top-hud">
+    <div class="map-brand">
+      <span class="brand-mark" data-icon="seal" aria-hidden="true"></span>
+      <div class="brand-type"><span id="brand-name">战役地图</span><small>标准版 9.0</small></div>
+    </div>
+    <div class="top-right">
+      <div id="status" class="top-status" hidden>
+        <span class="phase-indicator"></span><span id="phase-name"></span>
+        <span class="top-divider" aria-hidden="true"></span>
+        <span data-icon="clock"></span><span id="elapsed" class="numerals">00:00</span>
+      </div>
+      <button id="help-button" class="round-button" aria-label="操作指南" title="操作指南" data-local="help"><span data-icon="help"></span></button>
+      <button id="pause-button" class="round-button" aria-label="暂停游戏，快捷键 P" title="暂停游戏 (P)" data-send="pause" hidden><span data-icon="pause"></span></button>
+    </div>
+  </header>
+
+  <main>
+    <section id="landing" class="opening">
+      <div class="opening-shade" aria-hidden="true"></div>
+      <div class="opening-copy">
+        <h1><span>守卫</span>雅典娜</h1>
+        <div class="title-ornament" aria-hidden="true"><i></i><b></b><i></i></div>
+        <p>选择守护英雄，与驻军一同守住女神像。</p>
+        <div class="scenario-facts"><span><i data-icon="routes"></i>四路进攻</span><span><i data-icon="swords"></i><b id="chapter-range">第 1–18 波 · 双首领防守</b></span></div>
+        <button class="gold-button start-button" data-send="begin"><span>进入战场</span></button>
+      </div>
+    </section>
+
+    <section id="chooser" class="field-panel choose-panel" hidden aria-labelledby="choose-title">
+      <div class="hero-choice"><div id="choice-icon" class="choice-sigil" data-icon="helmet"></div><div><span class="overlabel">英雄选择</span><h2 id="choose-title">圣骑士</h2></div></div>
+      <div id="roster-options" class="roster-options" role="group" aria-label="可选英雄"></div>
+      <p id="hero-role"></p>
+      <button class="gold-button" data-send="select"><span>选择圣骑士</span></button>
+    </section>
+
+    <aside id="objective" class="field-panel objective" hidden>
+      <button class="objective-heading" data-send="focusBase" title="查看女神像 (Home)" aria-label="将视角移到女神像">
+        <i class="objective-icon" data-icon="temple"></i><strong>雅典娜女神像</strong><i class="focus-glyph" data-icon="focus"></i>
+      </button>
+      <div id="statue-meter" class="meter statue-meter" role="meter" aria-label="女神像生命值"><i></i></div>
+      <div class="objective-numbers"><span>生命</span><span id="statue-hp"></span></div>
+      <div class="objective-line"><span id="wave-caption"></span><strong id="wave-stat"></strong></div>
+    </aside>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <aside id="hero-tools" class="hero-tools field-panel" hidden aria-label="英雄成长与补给">
+      <div class="hero-heading"><strong id="level-badge"></strong><small id="xp-label"></small></div>
+      <progress id="xp-bar" max="200" value="0" aria-label="英雄经验"></progress>
+      <div class="hero-tools-nav"><button data-panel="skills" id="skills-entry">技能 K</button><button data-panel="shop">商店 G</button><button data-panel="bag">背包 I</button></div>
+    </aside>
+
+    <div id="map-hud" class="map-hud" hidden>
+      <div class="map-window"><canvas id="minimap" width="200" height="200" aria-label="战场小地图，点按可移动视角"></canvas><span class="compass-n" aria-hidden="true">N</span></div>
+      <div class="map-caption"><i data-icon="compass"></i><span>战术地图</span></div>
+    </div>
+
+    <div id="command-dock" class="command-dock" hidden>
+      <div class="unit-panel">
+        <button class="portrait" data-send="focusHero" title="查看英雄 (Space)" aria-label="将视角移到英雄"><i id="portrait-icon" data-icon="helmet"></i><kbd>空格</kbd></button>
+        <div class="unit-info">
+          <div class="unit-title"><strong id="unit-name">圣骑士</strong><span id="hero-status"></span></div>
+          <div class="vital"><i data-icon="heart"></i><div class="meter hp"><i></i></div><span id="hero-hp"></span></div>
+          <div class="vital"><i data-icon="drop"></i><div class="meter mp"><i></i></div><span id="hero-mp"></span></div>
+          <div class="inventory">
+            <span title="金币"><i data-icon="coins"></i><b id="gold">0</b></span>
+            <button id="buy-ankh" data-send="buyAnkh" title="去杂货店购买重生十字章 · 100 金币" aria-label="去杂货店购买一枚重生十字章，价格 100 金币"><i data-icon="ankh"></i>十字章 ×<b id="ankhs">0</b><b aria-hidden="true" class="plus">+</b></button>
+            <span title="个人击杀"><i data-icon="swords"></i><b id="kills">0</b></span>
+          </div>
+        </div>
+      </div>
+      <div class="actions" aria-label="英雄指令">
+        <div id="hero-actions" class="hero-actions"></div>
+        <button class="ability potion" data-send="potion" title="使用生命药水 (F)"><span class="key">F</span><i data-icon="potion"></i><span>生命药水</span><b class="cooldown"></b><small id="potion-count" class="stack-count"></small></button>
+        <button class="ability move" data-send="attackMove" title="攻击移动 · 选择后点按目的地 (M)"><span class="key">M</span><i data-icon="swords"></i><span>攻击移动</span></button>
+        <button class="ability buy" data-send="buy" title="购买一瓶生命药水 · 50 金币 (B)"><span class="key">B</span><i data-icon="pouch"></i><span>买药 · 50</span></button>
+      </div>
+    </div>
+
+    <section id="result" class="dialog-layer" hidden>
+      <div class="dialog field-panel result-card" role="dialog" aria-labelledby="result-title">
+        <i id="result-icon" class="dialog-emblem" data-icon="seal"></i>
+        <h2 id="result-title"></h2><p id="result-detail"></p>
+        <div class="result-stats"><span>作战用时<strong id="result-time"></strong></span><span>守军总击杀<strong id="result-kills"></strong></span></div>
+        <button class="gold-button" data-send="restart"><span>重新开始</span><i data-icon="restart"></i></button>
+      </div>
+    </section>
+    <section id="hero-menu" class="dialog-layer" hidden>
+      <div class="hero-sheet field-panel" role="dialog" aria-modal="true" aria-labelledby="hero-sheet-title">
+        <header><div><h2 id="hero-sheet-title">圣骑士</h2><div id="sheet-summary"></div></div><button type="button" data-sheet="close" class="quiet-button">返回战场 Esc</button></header>
+        <nav class="sheet-tabs" aria-label="英雄面板"><button data-panel="skills">英雄技能</button><button data-panel="shop">商店</button><button data-panel="bag">六格背包</button></nav>
+        <div id="sheet-content"></div>
+        <footer id="sheet-notice" role="status"></footer>
+      </div>
+    </section>
+
+    <section id="pause-layer" class="dialog-layer" hidden>
+      <div class="dialog field-panel" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+        <i class="dialog-emblem" data-icon="pause"></i><h2 id="pause-title">战斗暂停</h2>
+        <button class="gold-button" data-send="pause"><span>继续战斗</span></button>
+        <button class="quiet-button" data-local="help">操作指南</button><button class="quiet-button" data-send="restart">重新开始</button>
+      </div>
+    </section>
+    <section id="help-layer" class="dialog-layer" hidden>
+      <div class="dialog field-panel help-card" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <button class="round-button close-button" data-local="closeHelp" aria-label="关闭操作指南"><span data-icon="close"></span></button>
+        <h2 id="help-title">操作指南</h2>
+        <dl class="help-list">
+          <div><dt>移动 / 攻击敌人</dt><dd>右键地面 / 点选敌人</dd></div>
+          <div><dt>平移 / 缩放视角</dt><dd>中键拖动或方向键 / 滚轮</dd></div>
+          <div><dt>返回英雄 / 女神像</dt><dd>空格 / Home</dd></div>
+          <div><dt>施放英雄技能</dt><dd>Q / W / E / R</dd></div>
+          <div><dt>喝药 / 买一瓶药</dt><dd>F / B</dd></div>
+          <div><dt>技能 / 商店 / 背包</dt><dd>K / G / I</dd></div>
+          <div><dt>使用背包物品</dt><dd>数字 1–6</dd></div>
+          <div><dt>攻击移动 / 暂停</dt><dd>M / P</dd></div>
+        </dl>
+        <button class="gold-button" data-local="closeHelp"><span>返回战场</span></button>
+      </div>
+    </section>
+  </main>
+  <noscript>请启用 JavaScript 以加载三维战场。</noscript>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
